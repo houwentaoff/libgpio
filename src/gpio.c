@@ -34,7 +34,7 @@ static int do_direction (unsigned int gpio, char *direction);
  *-----------------------------------------------------------------------------*/
 #define RDONLY        0
 #define RDWR          1
-
+size_t strnlen(const char *s, size_t maxlen);
 int gpio_irq_timed_wait (unsigned int gpio, int *value, int timeout_ms)
 {
     int ret = 0;
@@ -363,11 +363,22 @@ void gpio_unexport(unsigned gpio)
 static int do_export_unexport (unsigned gpio, int export)
 {
     char c[STR_LEN];
+    char dir[STR_LEN];
     ssize_t len;
     int ret = 0;
 
     int fd;
-
+    ret = snprintf (dir, STR_LEN, "%s%d", SYSFS"gpio", gpio);
+    if (ret < 0 )
+    {
+        fprintf (stderr, "sysfs dir gpio no %d cannot be converted into a string", gpio);
+        goto close_out;
+    }
+    if (export && !access(dir, R_OK))
+    {
+        return ret;
+    }
+    
     if (export)
         fd = open (EXPORT, O_WRONLY);
     else
