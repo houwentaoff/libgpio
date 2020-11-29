@@ -32,4 +32,4 @@ clean:
 install:
 	-@echo ""
 
-.PHONY:clean
+.PHONY:clean test_gpio

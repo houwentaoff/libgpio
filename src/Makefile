@@ -1,6 +1,5 @@
 default:all
 
-all:tips lib
 
 tips:
 	-@echo  "\033[32m Building libgpio ... \033[0m"
@@ -14,16 +13,25 @@ include ../env.mk
 INC+= -I../include
 
 LD:= -lpthread
+LIBMODULE := gpio
+LIB := lib$(LIBMODULE).so lib$(LIBMODULE).a
+
+all:tips $(LIB)
 
 CFLAGS+=$(INC)
 LDFLAGS+=$(LD)
 
-lib:gpio.o 
+lib$(LIBMODULE).so:gpio.o 
 	-@mkdir -p ../lib
-	$(Q)$(AR) rucs ../lib/libgpio.a $^ 
-	@$(E) "  AR " $<
-	$(Q)$(CC) -shared -fPIC -o ../lib/libgpio.so $^
+	$(Q)$(CC) -shared -fPIC -o $@ $^
 	@$(E) "  Shared " $<
+	cp -a $@ ../lib/ -rf
+
+lib$(LIBMODULE).a:gpio.o 
+	-@mkdir -p ../lib
+	@$(E) "  AR " $<
+	$(Q)$(AR) rucs  $@ $^ 
+	cp -a $@ ../lib/ -rf
 
 %.o:%.c
 	$(Q)$(CC) -g -c $(CFLAGS) $< -o $@

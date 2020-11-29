@@ -1,8 +1,13 @@
-CROSS_COMPILE=/opt/buildroot-master/output/host/usr/bin/arm-linux-
+CROSS_COMPILE=
 CC=$(CROSS_COMPILE)gcc
 AR=$(CROSS_COMPILE)ar
 INC=-I$(TOP_DIR)/libgpio
+CFLAG = -fPIC
 
+vpath %.so $(TOP_DIR)/lib
+vpath %.a $(TOP_DIR)/lib
+vpath %.h $(TOP_DIR)/include
+V=1
 ifeq ($(V), 1)
 	Q=
 	E=true
