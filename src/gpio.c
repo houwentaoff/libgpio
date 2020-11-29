@@ -39,6 +39,8 @@ int gpio_irq_timed_wait (unsigned int gpio, int *value, int timeout_ms)
 {
     int ret = 0;
     int fd = 0;
+    char buf[10]={0};
+    int len = 0;
     
     struct pollfd irqdesc = {
         .events = POLLPRI | POLLERR ,
@@ -51,29 +53,45 @@ int gpio_irq_timed_wait (unsigned int gpio, int *value, int timeout_ms)
         ret = -1;
         return ret;
     }
-
+    len = read(fd,buf,10);
+    //printf("buf:%s len[%d]\n", buf, len);
     irqdesc.fd = fd;
+    do{
+        ret = poll (&irqdesc, 1, timeout_ms);
 
-    ret = poll (&irqdesc, 1, timeout_ms);
-
-    if (ret == -1)
-    {
-        ret = -errno;
-        close (fd);
-        fd = -1;
-        fprintf (stderr, "wait for irq failed: %d\n", ret);
-        return ret;
-    }
+        if (ret < -1)
+        {
+            ret = -errno;
+            close (fd);
+            fd = -1;
+            fprintf (stderr, "wait for irq failed: %d\n", ret);
+            return ret;
+        }
+        else if (ret == 0 )
+        {
+            //time out
+            *value = gpio_get_value(gpio);
+        }
+        else
+        {
+            if( irqdesc.revents & POLLPRI)
+            {
+                lseek(irqdesc.fd, 0, SEEK_SET);
+                len = read(irqdesc.fd, buf, 10);
+                *value = buf[0]-'0';
+                // data come in
+                //printf("data coming buf:%s\n", buf);
+            }
+        }
+    }while(0);
     close (fd);
     /* timeout */
     if (ret == 0)
     {
         return 1;
     }
-    *value = gpio_get_value(gpio);
     return ret;
 }
-
 
 int gpio_irq_wait (unsigned int gpio, int *value)
 {
